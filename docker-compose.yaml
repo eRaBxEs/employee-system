@@ -1,0 +1,14 @@
+version: '3.7'
+
+services:
+  azuresqledge:
+    image: mcr.microsoft.com/azure-sql-edge
+    container_name: azure-sql-edge-db
+    environment:
+      SA_PASSWORD: SUREcollection7!
+      ACCEPT_EULA: Y
+      MSSQL_PID: Developer   # Change to your required edition (e.g., Express, Standard, Enterprise)
+    ports:
+      - "57000:1433"   # Change the first port number if you want to map to a different host port
+    volumes:
+      - ./data:/var/opt/mssql/data   # Change the local path if needed to store data files
