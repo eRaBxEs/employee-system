@@ -1,0 +1,74 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Employee {
+  id: ID!
+  userID: ID!
+  firstName: String!
+  lastName: String!
+  password: String!
+  email: String!
+  dob: String!
+  departmentID: ID
+  position: String!
+}
+
+type Query {
+  getAllEmployees: [Employee!]!
+  getEmployee(id: ID!): Employee!
+}
+
+
+type Mutation {
+  createEmployee(input: CreateEmployeeInput!): Employee!
+  updateEmployee(id: ID!, input: UpdateEmployeeInput!): Employee!
+  deleteEmployee(id: ID!): DeleteEmployeeResponse!
+}
+
+input CreateEmployeeInput {
+  firstName: String!
+  lastName: String!
+  userName: String!
+  password: String!
+  email: String!
+  dob: String!
+  departmentID: ID!
+  position: String!
+}
+
+input UpdateEmployeeInput {
+  firstName: String!
+  lastName: String!
+  userName: String!
+  password: String!
+  email: String!
+  dob: String!
+  departmentID: ID!
+  position: String!
+}
+
+type DeleteEmployeeResponse {
+  deleteEmployeeId: String! 
+}
+
+input UserRequest {
+    userName: String!
+    password: String!
+}
+
+type User {
+    id: String!
+    userName: String!
+    password: String!
+    createdAt: String
+    updatedAt: String
+}
+
+type AuthResponse {
+    token: String,
+    refresh: String,
+    user: User,
+    accessTokenExpiry: String,
+    refreshTokenExpiry: String
+}
