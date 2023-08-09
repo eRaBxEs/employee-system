@@ -40,7 +40,7 @@ func (k Kind) String() string {
 	return [...]string{
 		"Unknown",
 		"Administrator",
-		"Agent",
+		"Staff",
 		"Partner",
 	}[k]
 }

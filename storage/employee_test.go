@@ -41,10 +41,10 @@ func (s *Suite) Test_GetEmployeeByID() {
 			AddRow(testEmployee.ID, testEmployee.FirstName, testEmployee.LastName, testEmployee.Email,
 				testEmployee.Dob, testEmployee.DepartmentID, testEmployee.Position))
 
-	retAgent, err := s.employeeDatabase.GetEmployeeByID(context.Background(), validUserID)
+	retEmployee, err := s.employeeDatabase.GetEmployeeByID(context.Background(), validUserID)
 
 	require.NoError(s.T(), err)
-	require.Equal(s.T(), retAgent, testEmployee)
+	require.Equal(s.T(), retEmployee, testEmployee)
 }
 
 func (s *Suite) Test_AddEmployee() {

@@ -22,9 +22,9 @@ const (
 	SortByCreatedAt string = "created_at"
 	// SortByUpdatedAt sort by updated_at on instalments table
 	SortByUpdatedAt string = "updated_at"
-	// SortByName sort by name on customers table
+
 	SortByName string = "name"
-	// SortByTags sort by tags on customers table
+
 	SortByTags string = "tags"
 	// SortByAmountToPayIncludingFees sort by amount_to_pay_including_fees on instalments table
 	SortByAmountToPayIncludingFees string = "amount_to_pay_including_fees"

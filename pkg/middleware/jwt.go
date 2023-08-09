@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	ginJwt "github.com/appleboy/gin-jwt/v2"
@@ -18,7 +17,6 @@ import (
 	graphModel "employee-management-system/graph/model"
 	"employee-management-system/model"
 	"employee-management-system/pkg/environment"
-	"employee-management-system/pkg/helper"
 )
 
 type (
@@ -46,7 +44,7 @@ var (
 	ErrAccountSuspended = errors.New("user account is suspended")
 	// ErrCorruptAdminAccount corrupt admin account
 	ErrCorruptAdminAccount = errors.New("corrupt admin account")
-	// ErrCorruptAgentAccount incorrect email or password
+	// ErrCorruptStaffAccount incorrect email or password
 	ErrCorruptStaffAccount = errors.New("corrupt empployee account")
 	// ErrUnexpectedSigningMethod occurs when a token does not conform to the expected signing method
 	ErrUnexpectedSigningMethod = errors.New("unexpected signing method")
@@ -64,7 +62,7 @@ func (m *Middleware) JwtAuthenticator(c *gin.Context, u, p string) (*graphModel.
 		return nil, ErrFailedAuthentication
 	}
 
-	// get relationship values (admin/agent), return error if any occurs
+	// get relationship values (admin/staff), return error if any occurs
 	user, err = m.evalKindForRelationship(c, user)
 	if err != nil {
 		return nil, err
@@ -179,84 +177,6 @@ func (m *Middleware) GetGinJWTMiddleware() *ginJwt.GinJWTMiddleware {
 }
 
 func (m *Middleware) evalKindForRelationship(ctx context.Context, user *model.User) (*model.User, error) {
-	switch user.Kind {
-	case model.KindAdministrator:
-		admin, err := m.adminStorage.GetByUserID(ctx, user.ID)
-		if err != nil {
-			return nil, ErrCorruptAdminAccount
-		}
-		user.Admin = &admin
-		if !user.Admin.Active {
-			return nil, ErrAccountSuspended
-		}
-	case model.KindAgent:
-		var partners []model.Partner
-		agent, err := m.agentStorage.GetByUserID(ctx, user.ID)
-		if err != nil {
-			return nil, ErrCorruptAgentAccount
-		}
-		user.Agent = &agent
-		if !user.Agent.Active {
-			return nil, ErrAccountSuspended
-		}
-		agentPartners, err := m.agentPartnerStorage.GetByAgentID(ctx, agent.ID)
-		if err != nil {
-			return nil, ErrFetchingAgentPartner
-		}
-		if len(agentPartners) > 0 {
-			for _, agentPartner := range agentPartners {
-				partner, err := m.partnerStorage.GetPartnerByID(ctx, agentPartner.PartnerID)
-				if err != nil {
-					return nil, ErrFetchingPartner
-				}
-				if partner.Active {
-					partnerSetting, err := partner.GetSettings()
-					if err != nil {
-						return nil, ErrFetchingPartner
-					}
-					if partnerSetting.WorkTime != nil {
-						timeFrom := partnerSetting.WorkTime[0]
-						timeTo := partnerSetting.WorkTime[1]
-						if timeFrom != nil && timeTo != nil {
-							timeNow, err := helper.SetGetTimezone(helper.GetEnvironmentVariable("TIMEZONE"), time.Now())
-							if err != nil {
-								return nil, ErrFetchingPartner
-							}
-							minute := timeNow.Minute()
-							hour := timeNow.Hour()
-							splitFromTime := strings.Split(*timeFrom, ":")
-							fromTimeHour, err := strconv.Atoi(splitFromTime[0])
-							if err != nil {
-								return nil, ErrFetchingPartner
-							}
-							fromTimeMinute, err := strconv.Atoi(splitFromTime[1])
-							if err != nil {
-								return nil, ErrFetchingPartner
-							}
-
-							splitToTime := strings.Split(*timeTo, ":")
-							toTimeHour, err := strconv.Atoi(splitToTime[0])
-							if err != nil {
-								return nil, ErrFetchingPartner
-							}
-							toTimeMinute, err := strconv.Atoi(splitToTime[1])
-							if err != nil {
-								return nil, ErrFetchingPartner
-							}
-							if !((hour > fromTimeHour && hour < toTimeHour) || ((fromTimeHour == hour && minute >= fromTimeMinute) || (toTimeHour == hour && minute <= toTimeMinute))) {
-								continue
-							}
-						}
-					}
-					partners = append(partners, partner)
-				}
-			}
-		}
-		agent.Partners = partners
-	}
-	// if not suspended
-	// cache user - new login
-	m.cache.cacheUser(user)
 
 	return user, nil
 }
@@ -341,7 +261,7 @@ func (m *Middleware) ValidateRefreshToken(z zerolog.Logger, c *gin.Context, toke
 
 	claims, ok := tokenGotten.Claims.(jwtGo.MapClaims)
 	claimsUUID := claims[claimsID].(string)
-	//get the last refresh token for this user/customer
+	//get the last refresh token for this user
 	refreshTokenCookie, err := c.Cookie(claimsUUID)
 	//error may be due to cookie expiration OR a new refresh token has been generated
 	if err != nil || refreshTokenCookie != token {
